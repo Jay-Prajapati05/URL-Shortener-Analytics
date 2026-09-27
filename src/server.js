@@ -4,7 +4,7 @@ dotenv.config({
 })
 import connectDB from "./config/db.js";
 import {app} from './app.js'
-
+import { connectRedis } from './config/redis.js';
 
 
 
@@ -18,5 +18,6 @@ connectDB()
     console.log("MONGO db connection failed !!! ", err);
 })
 
+await connectRedis();
 
 

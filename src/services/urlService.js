@@ -1,6 +1,7 @@
 import Url from "../models/url.js";
 import { generateShortCode } from "../utils/generateShortCode.js";
 import { AppError } from "../utils/AppError.js";
+import { getCache, setCache } from './cacheService.js';
 
 const MAX_RETRIES = 5;
 
@@ -32,6 +33,27 @@ export const createShortUrl = async (longUrl, expiresIn) => {
 };
 
 export const getOriginalUrl = async (shortCode) => {
+   const cacheKey = `shortCode:${shortCode}`;
+  const cached = await getCache(cacheKey);
+
+  if (cached) {
+    const data = JSON.parse(cached);
+    console.log('CACHE HIT:', shortCode);
+
+    if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+      throw new AppError('Ye link expire ho chuka hai', 410);
+    }
+
+    // click count background mein update, redirect ko wait nahi karana
+    Url.updateOne({ shortCode }, { $inc: { clicks: 1 } }).catch((err) =>
+      console.error('Click update failed:', err)
+    );
+
+    return data.longUrl;
+  }
+  
+  
+  
   const url = await Url.findOne({ shortCode });
 
   if (!url) {
@@ -41,9 +63,12 @@ export const getOriginalUrl = async (shortCode) => {
   if (url.expiresAt && url.expiresAt < new Date()) {
     throw new AppError("Ye link expire ho chuka hai", 410);
   }
-
+  
+   await setCache(cacheKey, JSON.stringify({ longUrl: url.longUrl, expiresAt: url.expiresAt }));
   // atomic increment — alag se, taaki concurrent clicks mein count lose na ho
   await Url.updateOne({ _id: url._id }, { $inc: { clicks: 1 } });
-
+  console.log('CACHE MISS (DB se laya):', shortCode);
   return url.longUrl;
 };
+
+
