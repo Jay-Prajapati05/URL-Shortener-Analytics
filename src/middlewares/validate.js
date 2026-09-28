@@ -9,6 +9,6 @@ export const validate = (schema) => (req, res, next) => {
     });
   }
 
-  req.body = result.data; // parsed/cleaned data wapas daal do
+  req.body = result.data; // replace body with the parsed, cleaned data
   next();
 };

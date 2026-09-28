@@ -5,7 +5,7 @@ export const shortenUrl = async (req, res, next) => {
     const { longUrl, expiresIn } = req.body;
 
     if (!longUrl) {
-      return res.status(400).json({ message: "longUrl zaroori hai" });
+      return res.status(400).json({ message: "longUrl is required" });
     }
 
     const url = await createShortUrl(longUrl, expiresIn);
@@ -15,7 +15,7 @@ export const shortenUrl = async (req, res, next) => {
       shortUrl: `${req.protocol}://${req.get("host")}/${url.shortCode}`,
     });
   } catch (err) {
-    next(err); // error handler ko de do, khud handle mat karo
+    next(err); // pass to the centralized error handler
   }
 };
 
