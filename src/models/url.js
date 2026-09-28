@@ -10,18 +10,18 @@ const urlSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true, // fast lookup ke liye, redirect isi field pe query karega
+      index: true, // indexed because redirects always look up by this field
     },
     expiresAt: {
       type: Date,
-      default: null, // null matlab kabhi expire nahi hoga
+      default: null, // null means the link never expires
     },
     clicks: {
       type: Number,
       default: 0,
     },
   },
-  { timestamps: true }, // createdAt, updatedAt automatic
+  { timestamps: true }, // adds createdAt and updatedAt automatically
 );
 
 export default mongoose.model("Url", urlSchema);

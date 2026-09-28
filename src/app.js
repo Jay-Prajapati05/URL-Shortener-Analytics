@@ -1,30 +1,30 @@
-import express from "express"
-import cors from "cors"
+import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
-import urlRoutes from './routes/url.routes.js';
-import { errorHandler } from './middlewares/errorHandler.js';
+import urlRoutes from "./routes/url.routes.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
-app.use(cors({
+app.use(
+  cors({
     origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+    credentials: true,
+  }),
+);
 
-app.use(express.json())
-app.use(express.urlencoded({extended:true}))
-app.use(express.static("public")) //use for store files in server
-app.use(cookieParser())
- 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public")); //use for store files in server
+app.use(cookieParser());
 
 //url projects
 
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
 });
 
-app.use('/', urlRoutes); // shorten + redirect dono yahin se
+app.use("/", urlRoutes); // shorten and redirect routes
 
-app.use(errorHandler); // hamesha SABSE LAST
+app.use(errorHandler); //  must always be registered last
 
-
-export {app}
+export { app };

@@ -1,15 +1,14 @@
-// src/middlewares/errorHandler.js
 export const errorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
-  // isOperational = humne khud ye error socha aur bheja (404, 410, etc.)
-  // agar false hai, matlab ye ek unexpected bug hai — raw message client ko mat bhejo
+  // isOperational = an error we raised on purpose (404, 410, etc.)
+  // if false, it's an unexpected bug, so don't send the raw message to the client
   const message = err.isOperational
     ? err.message
-    : "Kuch galat ho gaya, server error";
+    : "Something went wrong on the server";
 
   if (process.env.NODE_ENV !== "production") {
-    console.error(err); // dev mein full error dikhna chahiye debug ke liye
+    console.error(err); //  show the full error in dev for debugging
   }
 
   res.status(statusCode).json({

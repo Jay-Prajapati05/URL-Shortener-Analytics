@@ -9,7 +9,7 @@ export const createShortUrl = async (longUrl, expiresIn) => {
   let shortCode;
   let attempts = 0;
 
-  // collision check: bahut kam chance hai, lekin scale pe possible hai
+  // collision check: very unlikely, but possible at scale
   while (attempts < MAX_RETRIES) {
     shortCode = generateShortCode();
     const existing = await Url.findOne({ shortCode });
@@ -19,13 +19,13 @@ export const createShortUrl = async (longUrl, expiresIn) => {
 
   if (attempts === MAX_RETRIES) {
     throw new AppError(
-      "Unique short code nahi bana paye, dobara try karo",
+      "Could not generate a unique short code, please try again",
       500,
     );
   }
 
   const expiresAt = expiresIn
-    ? new Date(Date.now() + expiresIn * 1000) // expiresIn seconds mein aayega
+    ? new Date(Date.now() + expiresIn * 1000) // expiresIn is in seconds
     : null;
 
   const url = await Url.create({ longUrl, shortCode, expiresAt });
@@ -41,10 +41,10 @@ export const getOriginalUrl = async (shortCode) => {
     console.log('CACHE HIT:', shortCode);
 
     if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
-      throw new AppError('Ye link expire ho chuka hai', 410);
+      throw new AppError('This link has expired', 410);
     }
 
-    // click count background mein update, redirect ko wait nahi karana
+    //  update click count in the background so the redirect doesn't wait on the DB write
     Url.updateOne({ shortCode }, { $inc: { clicks: 1 } }).catch((err) =>
       console.error('Click update failed:', err)
     );
@@ -57,17 +57,17 @@ export const getOriginalUrl = async (shortCode) => {
   const url = await Url.findOne({ shortCode });
 
   if (!url) {
-    throw new AppError("Short URL nahi mila", 404);
+    throw new AppError("Short URL not found", 404);
   }
 
   if (url.expiresAt && url.expiresAt < new Date()) {
-    throw new AppError("Ye link expire ho chuka hai", 410);
+    throw new AppError("This link has expired", 410);
   }
   
    await setCache(cacheKey, JSON.stringify({ longUrl: url.longUrl, expiresAt: url.expiresAt }));
-  // atomic increment — alag se, taaki concurrent clicks mein count lose na ho
+  // atomic increment, done separately so concurrent clicks don't lose counts
   await Url.updateOne({ _id: url._id }, { $inc: { clicks: 1 } });
-  console.log('CACHE MISS (DB se laya):', shortCode);
+  console.log('CACHE MISS (fetch from DB, then populate the cache):', shortCode);
   return url.longUrl;
 };
 

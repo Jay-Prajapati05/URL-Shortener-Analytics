@@ -2,6 +2,6 @@
 import { z } from 'zod';
 
 export const shortenUrlSchema = z.object({
-  longUrl: z.string().url({ message: 'Valid URL do' }),
-  expiresIn: z.number().positive().optional(), // seconds mein
+  longUrl: z.string().url({ message: 'Please provide a valid URL' }),
+  expiresIn: z.number().positive().optional(), // in seconds
 });
